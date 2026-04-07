@@ -3,10 +3,9 @@
 
   <#if section = "">
     <h1 class="bw-heading">${msg("loginAccountTitle")}</h1>
-    <p class="bw-subheading">${msg("loginSubtitle"!"Sign in to your account")}</p>
+    <p class="bw-subheading">Sign in to your account</p>
 
-    <#-- Social / identity providers -->
-    <#if social.providers??>
+    <#if social?? && social.providers?has_content>
       <div class="bw-social">
         <#list social.providers as p>
           <a href="${p.loginUrl}" class="bw-social-btn" id="social-${p.alias}">
@@ -24,7 +23,6 @@
       <input type="hidden" id="id-hidden-input" name="credentialId"
              <#if auth.selectedCredential?has_content>value="${auth.selectedCredential}"</#if>/>
 
-      <#-- Username / email -->
       <div class="bw-field">
         <label class="bw-label" for="username">
           <#if !realm.loginWithEmailAllowed>${msg("username")}
@@ -34,12 +32,9 @@
         </label>
         <input
           class="bw-input<#if messagesPerField.existsError('username','password')> error</#if>"
-          id="username"
-          name="username"
-          type="text"
+          id="username" name="username" type="text"
           value="${(login.username!'')}"
-          autofocus
-          autocomplete="username"
+          autofocus autocomplete="username"
           <#if usernameEditDisabled??>readonly</#if>
         />
         <#if messagesPerField.existsError('username')>
@@ -47,21 +42,18 @@
         </#if>
       </div>
 
-      <#-- Password -->
       <div class="bw-field">
         <label class="bw-label" for="password">${msg("password")}</label>
         <div class="bw-input-wrap">
           <input
             class="bw-input<#if messagesPerField.existsError('username','password')> error</#if>"
-            id="password"
-            name="password"
-            type="password"
+            id="password" name="password" type="password"
             autocomplete="current-password"
           />
           <button type="button" class="bw-eye" aria-label="Toggle password visibility"
                   onclick="togglePassword('password', this)">
-            <svg id="eye-show-password" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
@@ -73,7 +65,6 @@
         </#if>
       </div>
 
-      <#-- Remember me + forgot password -->
       <#if realm.rememberMe?? && realm.rememberMe || realm.resetPasswordAllowed>
         <div class="bw-row">
           <#if realm.rememberMe?? && realm.rememberMe>
@@ -106,12 +97,10 @@
 <script>
   function togglePassword(fieldId, btn) {
     var input = document.getElementById(fieldId);
-    if (input.type === 'password') {
-      input.type = 'text';
-      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-    } else {
-      input.type = 'password';
-      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    }
+    var isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.innerHTML = isHidden
+      ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   }
 </script>
