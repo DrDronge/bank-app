@@ -21,20 +21,47 @@ services:
       timeout: 5s
       retries: 5
 
+  keycloak-db:
+    image: cgr.dev/chainguard/postgres:latest
+    container_name: keycloak_db
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: ${KC_DB_NAME}
+      POSTGRES_USER: ${KC_DB_USER}
+      POSTGRES_PASSWORD: ${KC_DB_PASSWORD}
+    networks:
+      - app_network
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${KC_DB_USER}", "-d", "${KC_DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.5.7
     container_name: keycloak
+    # Use start-dev for local dev (embedded H2, no TLS required).
+    # For production: switch to `start` and add KC_HOSTNAME, KC_HTTPS_* env vars.
     command: start-dev --import-realm
+    env_file:
+      - .env
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KC_DB_NAME}
+      KC_DB_USERNAME: ${KC_DB_USER}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
     volumes:
       - ./keycloak:/opt/keycloak/data/import:ro
-      - keycloak_data:/opt/keycloak/data/h2
     ports:
       - "127.0.0.1:8180:8080"
     networks:
       - app_network
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
 
   api:
     build:
@@ -98,7 +125,7 @@ volumes:
     driver: local
   pgadmin_config_dir:
     driver: local
-  keycloak_data:
+  keycloak_db_data:
     driver: local
 
 networks:

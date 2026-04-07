@@ -23,6 +23,8 @@ public class TransactionsController(ITransactionRepository repository) : AuthCon
         [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDesc = true)
     {
+        pageSize = Math.Clamp(pageSize, 1, 500);
+
         DateOnly? fromDate = null;
         DateOnly? toDate = null;
         if (!string.IsNullOrEmpty(from))

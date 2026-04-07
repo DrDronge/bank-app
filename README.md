@@ -80,12 +80,12 @@ docker compose down -v   # removes all volumes — also clears postgres!
 docker compose up --build
 ```
 
-To reset only Keycloak without touching Postgres:
+To reset only Keycloak without touching the app database:
 
 ```bash
-docker compose stop keycloak
-docker volume rm bank-app_keycloak_data
-docker compose up keycloak -d
+docker compose stop keycloak keycloak-db
+docker volume rm bank-app_keycloak_db_data
+docker compose up keycloak-db keycloak -d
 ```
 
 ---
@@ -179,14 +179,51 @@ These are set separately in `compose.yaml` (`Keycloak__Authority` vs `Keycloak__
 
 ### Production deployment
 
-For Kubernetes or any public deployment:
+#### Checklist
 
-- Put Keycloak behind HTTPS (e.g. a TLS-terminating ingress).
-- Set `Keycloak__Authority` to the internal service URL (e.g. `http://keycloak.auth.svc.cluster.local:8080/realms/bank`).
-- Set `Keycloak__PublicUrl` to the public HTTPS URL (e.g. `https://auth.yourdomain.com`).
-- Update `redirectUris` and `webOrigins` in the Keycloak realm config (or via the admin UI) to match your domain.
-- Store credentials (DB password, Keycloak admin password) in Kubernetes Secrets and inject them as environment variables.
-- Remove `RequireHttpsMetadata = false` — this is automatically enabled when `ASPNETCORE_ENVIRONMENT != Development`.
+| Item | What to do |
+|---|---|
+| TLS | Put both the app and Keycloak behind HTTPS (e.g. a TLS-terminating ingress or reverse proxy). |
+| Keycloak mode | Change `start-dev` → `start` in `compose.yaml`. Add `KC_HOSTNAME=https://auth.yourdomain.com` and configure HTTPS certs or a TLS termination proxy. |
+| Secrets | Store all passwords in Kubernetes Secrets (or a secrets manager) — never commit real credentials. |
+| Keycloak DB | The compose setup already uses a dedicated Postgres database for Keycloak (`keycloak-db`). In production use a managed database service. |
+| Redirect URIs | Update `redirectUris` and `webOrigins` in the Keycloak realm (admin UI → Clients → bank-web) to match your production domain. |
+| HSTS | The API sets `Strict-Transport-Security: max-age=31536000; includeSubDomains` automatically outside Development. |
+| `RequireHttpsMetadata` | Automatically `true` outside Development — no change needed. |
+
+#### Kubernetes example
+
+```yaml
+# Secret (create with: kubectl create secret generic bank-secrets --from-env-file=.env.prod)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bank-secrets
+type: Opaque
+stringData:
+  DB_PASSWORD: "your-strong-db-password"
+  KC_ADMIN_PASSWORD: "your-strong-kc-admin-password"
+  KC_DB_PASSWORD: "your-strong-kc-db-password"
+```
+
+Inject into the API deployment:
+
+```yaml
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: Production
+  - name: ConnectionStrings__DefaultConnection
+    value: "Host=postgres-svc;Port=5432;Database=bank_db;Username=admin;Password=$(DB_PASSWORD)"
+  - name: Keycloak__Authority
+    value: "http://keycloak-svc:8080/realms/bank"
+  - name: Keycloak__PublicUrl
+    value: "https://auth.yourdomain.com"
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: bank-secrets
+        key: DB_PASSWORD
+```
 
 ---
 
@@ -305,4 +342,4 @@ Accepts `?accountId=n` to associate imported transactions with a specific accoun
 
 - `*.csv` files are gitignored to prevent real financial data from being committed accidentally.
 - Dark mode is supported with a manual toggle (stored in `localStorage`).
-- The Keycloak `start-dev` mode uses an embedded H2 database. User data persists between restarts via the `keycloak_data` Docker volume, but this is not recommended for production — use a dedicated PostgreSQL database for Keycloak.
+- The Keycloak `start-dev` mode is for local development only. For production use `start` with a TLS-terminating proxy. The compose setup uses a dedicated PostgreSQL database (`keycloak-db`) for Keycloak data, so user accounts persist correctly between restarts.

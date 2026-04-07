@@ -2,7 +2,7 @@
   "realm": "bank",
   "enabled": true,
   "displayName": "BudgetWise",
-  "sslRequired": "none",
+  "sslRequired": "external",
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
