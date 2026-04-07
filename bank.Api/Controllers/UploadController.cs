@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using bank.Api.Services;
+using bank.Persistence.Repository;
 
 namespace bank.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UploadController(CsvImportService importService) : ControllerBase
+[Authorize]
+public class UploadController(CsvImportService importService, IBankAccountRepository accountRepository) : AuthControllerBase
 {
     [HttpPost]
     [RequestSizeLimit(10 * 1024 * 1024)] // 10 MB max
@@ -17,8 +20,16 @@ public class UploadController(CsvImportService importService) : ControllerBase
         if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { error = "Only CSV files are supported." });
 
+        // Verify the target account belongs to this user
+        if (accountId.HasValue)
+        {
+            var account = await accountRepository.GetByIdAsync(accountId.Value, UserId);
+            if (account is null)
+                return NotFound(new { error = "Account not found." });
+        }
+
         using var stream = file.OpenReadStream();
-        var result = await importService.ImportAsync(stream, accountId);
+        var result = await importService.ImportAsync(stream, UserId, accountId);
 
         return Ok(new
         {

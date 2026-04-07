@@ -6,6 +6,7 @@ namespace bank.Persistence.Repository;
 public class TransactionRepository(ApplicationDbContext db) : ITransactionRepository
 {
     public async Task<(List<Transaction> Items, int Total)> GetPagedAsync(
+        string userId,
         int page, int pageSize,
         string? search = null,
         string? category = null,
@@ -16,7 +17,7 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
         string? sortBy = null,
         bool sortDesc = true)
     {
-        var query = db.Transactions.AsQueryable();
+        var query = db.Transactions.Where(t => t.UserId == userId);
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(t => t.Text.Contains(search) || t.Category.Contains(search));
@@ -58,8 +59,11 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
         return (items, total);
     }
 
-    public Task<List<Transaction>> GetAllAsync() =>
-        db.Transactions.OrderByDescending(t => t.Date).ToListAsync();
+    public Task<List<Transaction>> GetAllAsync(string userId) =>
+        db.Transactions
+            .Where(t => t.UserId == userId)
+            .OrderByDescending(t => t.Date)
+            .ToListAsync();
 
     public async Task AddRangeAsync(IEnumerable<Transaction> transactions)
     {
@@ -67,25 +71,29 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
         await db.SaveChangesAsync();
     }
 
-    public Task<bool> ExistsAsync(DateOnly date, string text, decimal amount) =>
-        db.Transactions.AnyAsync(t => t.Date == date && t.Text == text && t.Amount == amount);
+    public Task<bool> ExistsAsync(DateOnly date, string text, decimal amount, string userId) =>
+        db.Transactions.AnyAsync(t =>
+            t.UserId == userId &&
+            t.Date == date &&
+            t.Text == text &&
+            t.Amount == amount);
 
-    public Task<List<string>> GetCategoriesAsync() =>
+    public Task<List<string>> GetCategoriesAsync(string userId) =>
         db.Transactions
+            .Where(t => t.UserId == userId)
             .Select(t => t.Category)
             .Distinct()
             .OrderBy(c => c)
             .ToListAsync();
 
-    public async Task<Dictionary<string, decimal>> GetSpendingByCategoryAsync(DateOnly from, DateOnly to, int? accountId = null)
+    public async Task<Dictionary<string, decimal>> GetSpendingByCategoryAsync(string userId, DateOnly from, DateOnly to, int? accountId = null)
     {
         var query = db.Transactions
-            .Where(t => t.Date >= from && t.Date <= to && t.Amount < 0);
+            .Where(t => t.UserId == userId && t.Date >= from && t.Date <= to && t.Amount < 0);
 
         if (accountId.HasValue)
             query = query.Where(t => t.BankAccountId == accountId.Value);
 
-        // Fetch to memory first to avoid EF Core translation issues with GroupBy
         var rows = await query
             .Select(t => new { t.Category, t.Amount })
             .ToListAsync();
@@ -95,16 +103,14 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
             .ToDictionary(g => g.Key, g => g.Sum(t => Math.Abs(t.Amount)));
     }
 
-    public async Task<List<MonthlyTotal>> GetMonthlyTotalsAsync(DateOnly from, DateOnly to, int? accountId = null)
+    public async Task<List<MonthlyTotal>> GetMonthlyTotalsAsync(string userId, DateOnly from, DateOnly to, int? accountId = null)
     {
         var query = db.Transactions
-            .Where(t => t.Date >= from && t.Date <= to);
+            .Where(t => t.UserId == userId && t.Date >= from && t.Date <= to);
 
         if (accountId.HasValue)
             query = query.Where(t => t.BankAccountId == accountId.Value);
 
-        // EF Core can't translate nested Where+Sum inside GroupBy.Select to SQL,
-        // so fetch just year/month/amount to memory and group there.
         var rows = await query
             .Select(t => new { t.Date.Year, t.Date.Month, t.Amount })
             .ToListAsync();
@@ -120,10 +126,10 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
             .ToList();
     }
 
-    public async Task<List<DailyBalance>> GetBalanceHistoryAsync(DateOnly from, DateOnly to, int? accountId = null)
+    public async Task<List<DailyBalance>> GetBalanceHistoryAsync(string userId, DateOnly from, DateOnly to, int? accountId = null)
     {
         var query = db.Transactions
-            .Where(t => t.Date >= from && t.Date <= to);
+            .Where(t => t.UserId == userId && t.Date >= from && t.Date <= to);
 
         if (accountId.HasValue)
             query = query.Where(t => t.BankAccountId == accountId.Value);
@@ -140,15 +146,14 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
             .ToList();
     }
 
-    public async Task<List<RecurringCandidate>> GetRecurringCandidatesAsync(DateOnly from, DateOnly to, int? accountId)
+    public async Task<List<RecurringCandidate>> GetRecurringCandidatesAsync(string userId, DateOnly from, DateOnly to, int? accountId)
     {
         var query = db.Transactions
-            .Where(t => t.Date >= from && t.Date <= to && t.Amount < 0);
+            .Where(t => t.UserId == userId && t.Date >= from && t.Date <= to && t.Amount < 0);
 
         if (accountId.HasValue)
             query = query.Where(t => t.BankAccountId == accountId.Value);
 
-        // Fetch text, year, month, amount to memory — GroupBy with Distinct subquery can't be translated
         var rows = await query
             .Select(t => new { t.Text, t.Date.Year, t.Date.Month, t.Amount })
             .ToListAsync();
@@ -176,10 +181,10 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
             .ToList();
     }
 
-    public async Task<decimal> GetMatchedTotalAsync(string matchText, DateOnly from, DateOnly to, int? accountId)
+    public async Task<decimal> GetMatchedTotalAsync(string userId, string matchText, DateOnly from, DateOnly to, int? accountId)
     {
         var query = db.Transactions
-            .Where(t => t.Date >= from && t.Date <= to && t.Amount < 0)
+            .Where(t => t.UserId == userId && t.Date >= from && t.Date <= to && t.Amount < 0)
             .Where(t => t.Text.Contains(matchText));
 
         if (accountId.HasValue)
@@ -189,10 +194,10 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
         return Math.Abs(total);
     }
 
-    public async Task<List<MonthlyMatchedAmount>> GetMonthlyByTextAsync(string matchText, DateOnly from, DateOnly to, int? accountId)
+    public async Task<List<MonthlyMatchedAmount>> GetMonthlyByTextAsync(string userId, string matchText, DateOnly from, DateOnly to, int? accountId)
     {
         var query = db.Transactions
-            .Where(t => t.Date >= from && t.Date <= to && t.Amount < 0)
+            .Where(t => t.UserId == userId && t.Date >= from && t.Date <= to && t.Amount < 0)
             .Where(t => t.Text.Contains(matchText));
 
         if (accountId.HasValue)
@@ -206,9 +211,9 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
             .ToList();
     }
 
-    public async Task<(DateOnly? First, DateOnly? Last)> GetDateRangeAsync(int? accountId = null)
+    public async Task<(DateOnly? First, DateOnly? Last)> GetDateRangeAsync(string userId, int? accountId = null)
     {
-        var query = db.Transactions.AsQueryable();
+        var query = db.Transactions.Where(t => t.UserId == userId);
         if (accountId.HasValue) query = query.Where(t => t.BankAccountId == accountId);
 
         if (!await query.AnyAsync())
@@ -219,8 +224,8 @@ public class TransactionRepository(ApplicationDbContext db) : ITransactionReposi
         return (first, last);
     }
 
-    public async Task DeleteAllAsync()
+    public async Task DeleteAllAsync(string userId)
     {
-        await db.Transactions.ExecuteDeleteAsync();
+        await db.Transactions.Where(t => t.UserId == userId).ExecuteDeleteAsync();
     }
 }

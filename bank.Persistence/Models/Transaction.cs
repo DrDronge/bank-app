@@ -3,6 +3,7 @@ namespace bank.Persistence.Models;
 public class Transaction
 {
     public int Id { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public DateOnly Date { get; set; }
     public string Category { get; set; } = string.Empty;
     public string Subcategory { get; set; } = string.Empty;

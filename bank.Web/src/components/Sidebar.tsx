@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, List, Receipt, Upload, TrendingUp, Sun, Moon, PiggyBank } from 'lucide-react'
+import { LayoutDashboard, List, Receipt, Upload, TrendingUp, Sun, Moon, PiggyBank, LogOut } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { getKeycloak } from '../keycloak'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -12,6 +13,8 @@ const navItems = [
 
 export default function Sidebar() {
   const { theme, toggle } = useTheme()
+  const kc = getKeycloak()
+  const username: string = (kc.tokenParsed as Record<string, string> | undefined)?.['preferred_username'] ?? 'Account'
 
   return (
     <aside className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-10">
@@ -48,15 +51,34 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <p className="text-xs text-slate-400 dark:text-slate-500">Data stored securely</p>
-        <button
-          onClick={toggle}
-          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
+      <div className="px-4 py-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        {/* User info */}
+        <div className="flex items-center gap-2 px-1">
+          <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-semibold text-primary-700 dark:text-primary-400">
+              {username.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium truncate">{username}</p>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => kc.logout()}
+            className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+            title="Sign out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sign out
+          </button>
+          <button
+            onClick={toggle}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
     </aside>
   )

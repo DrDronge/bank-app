@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Bank CSV exports — may contain real financial data
+*.csv
+
 # User-specific files
 *.rsuser
 *.suo

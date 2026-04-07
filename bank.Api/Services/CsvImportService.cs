@@ -9,7 +9,7 @@ namespace bank.Api.Services;
 
 public class CsvImportService(ITransactionRepository repository)
 {
-    public async Task<ImportResult> ImportAsync(Stream stream, int? accountId = null)
+    public async Task<ImportResult> ImportAsync(Stream stream, string userId, int? accountId = null)
     {
         var bytes = await ReadAllBytesAsync(stream);
         var csvText = DecodeBytes(bytes);
@@ -49,12 +49,13 @@ public class CsvImportService(ITransactionRepository repository)
 
                 if (tx is null) { skipped++; continue; }
 
-                if (await repository.ExistsAsync(tx.Date, tx.Text, tx.Amount))
+                if (await repository.ExistsAsync(tx.Date, tx.Text, tx.Amount, userId))
                 {
                     skipped++;
                     continue;
                 }
 
+                tx.UserId = userId;
                 tx.BankAccountId = accountId;
                 transactions.Add(tx);
             }

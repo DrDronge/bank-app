@@ -138,8 +138,8 @@ export const uploadCsv = (file: File, accountId?: number | null) => {
   ).then(r => r.data)
 }
 
-// Export — builds a URL so the browser triggers a download
-export const buildExportUrl = (params: {
+// Export — authenticated download via axios (required since Bearer token can't be sent via <a href>)
+export const exportCsv = async (params: {
   search?: string
   category?: string
   from?: string
@@ -147,9 +147,17 @@ export const buildExportUrl = (params: {
   type?: string
   accountId?: number | null
 }) => {
-  const q = new URLSearchParams()
-  Object.entries(params).forEach(([k, v]) => { if (v != null && v !== '') q.set(k, String(v)) })
-  return `/api/transactions/export${q.size ? '?' + q.toString() : ''}`
+  const clean: Record<string, string> = {}
+  Object.entries(params).forEach(([k, v]) => { if (v != null && v !== '') clean[k] = String(v) })
+  const resp = await api.get('/transactions/export', { params: clean, responseType: 'blob' })
+  const url = URL.createObjectURL(resp.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 // Bank Accounts

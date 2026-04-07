@@ -5,13 +5,17 @@ namespace bank.Persistence.Repository;
 
 public class RecurringExpenseRepository(ApplicationDbContext db) : IRecurringExpenseRepository
 {
-    public Task<List<RecurringExpense>> GetAllAsync() =>
-        db.RecurringExpenses.OrderBy(r => r.FrequencyMonths).ThenBy(r => r.Name).ToListAsync();
+    public Task<List<RecurringExpense>> GetAllAsync(string userId) =>
+        db.RecurringExpenses
+            .Where(r => r.UserId == userId)
+            .OrderBy(r => r.FrequencyMonths).ThenBy(r => r.Name)
+            .ToListAsync();
 
-    public async Task<RecurringExpense> CreateAsync(string name, decimal amount, int frequencyMonths, string? category, string? notes, string? matchText, DateOnly? endDate)
+    public async Task<RecurringExpense> CreateAsync(string userId, string name, decimal amount, int frequencyMonths, string? category, string? notes, string? matchText, DateOnly? endDate)
     {
         var expense = new RecurringExpense
         {
+            UserId = userId,
             Name = name,
             Amount = amount,
             FrequencyMonths = frequencyMonths,
@@ -26,9 +30,9 @@ public class RecurringExpenseRepository(ApplicationDbContext db) : IRecurringExp
         return expense;
     }
 
-    public async Task<RecurringExpense?> UpdateAsync(int id, string name, decimal amount, int frequencyMonths, string? category, string? notes, string? matchText, DateOnly? endDate)
+    public async Task<RecurringExpense?> UpdateAsync(string userId, int id, string name, decimal amount, int frequencyMonths, string? category, string? notes, string? matchText, DateOnly? endDate)
     {
-        var expense = await db.RecurringExpenses.FindAsync(id);
+        var expense = await db.RecurringExpenses.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
         if (expense is null) return null;
 
         expense.Name = name;
@@ -43,9 +47,9 @@ public class RecurringExpenseRepository(ApplicationDbContext db) : IRecurringExp
         return expense;
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(string userId, int id)
     {
-        var expense = await db.RecurringExpenses.FindAsync(id);
+        var expense = await db.RecurringExpenses.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
         if (expense is not null)
         {
             db.RecurringExpenses.Remove(expense);

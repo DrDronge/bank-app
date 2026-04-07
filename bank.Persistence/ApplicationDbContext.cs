@@ -17,6 +17,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(e => e.Amount).HasPrecision(18, 2);
             entity.Property(e => e.Balance).HasPrecision(18, 2);
             entity.HasIndex(e => new { e.Date, e.Text, e.Amount });
+            entity.HasIndex(e => e.UserId);
 
             entity.HasOne(e => e.BankAccount)
                   .WithMany()
@@ -28,12 +29,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<BankAccount>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId);
         });
 
         modelBuilder.Entity<RecurringExpense>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.UserId);
         });
     }
 }

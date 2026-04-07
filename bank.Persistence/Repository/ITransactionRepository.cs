@@ -5,6 +5,7 @@ namespace bank.Persistence.Repository;
 public interface ITransactionRepository
 {
     Task<(List<Transaction> Items, int Total)> GetPagedAsync(
+        string userId,
         int page, int pageSize,
         string? search = null,
         string? category = null,
@@ -15,18 +16,18 @@ public interface ITransactionRepository
         string? sortBy = null,
         bool sortDesc = true);
 
-    Task<List<Transaction>> GetAllAsync();
+    Task<List<Transaction>> GetAllAsync(string userId);
     Task AddRangeAsync(IEnumerable<Transaction> transactions);
-    Task<bool> ExistsAsync(DateOnly date, string text, decimal amount);
-    Task<List<string>> GetCategoriesAsync();
-    Task<Dictionary<string, decimal>> GetSpendingByCategoryAsync(DateOnly from, DateOnly to, int? accountId = null);
-    Task<List<MonthlyTotal>> GetMonthlyTotalsAsync(DateOnly from, DateOnly to, int? accountId = null);
-    Task<List<DailyBalance>> GetBalanceHistoryAsync(DateOnly from, DateOnly to, int? accountId = null);
-    Task<(DateOnly? First, DateOnly? Last)> GetDateRangeAsync(int? accountId = null);
-    Task<decimal> GetMatchedTotalAsync(string matchText, DateOnly from, DateOnly to, int? accountId);
-    Task<List<MonthlyMatchedAmount>> GetMonthlyByTextAsync(string matchText, DateOnly from, DateOnly to, int? accountId);
-    Task<List<RecurringCandidate>> GetRecurringCandidatesAsync(DateOnly from, DateOnly to, int? accountId);
-    Task DeleteAllAsync();
+    Task<bool> ExistsAsync(DateOnly date, string text, decimal amount, string userId);
+    Task<List<string>> GetCategoriesAsync(string userId);
+    Task<Dictionary<string, decimal>> GetSpendingByCategoryAsync(string userId, DateOnly from, DateOnly to, int? accountId = null);
+    Task<List<MonthlyTotal>> GetMonthlyTotalsAsync(string userId, DateOnly from, DateOnly to, int? accountId = null);
+    Task<List<DailyBalance>> GetBalanceHistoryAsync(string userId, DateOnly from, DateOnly to, int? accountId = null);
+    Task<(DateOnly? First, DateOnly? Last)> GetDateRangeAsync(string userId, int? accountId = null);
+    Task<decimal> GetMatchedTotalAsync(string userId, string matchText, DateOnly from, DateOnly to, int? accountId);
+    Task<List<MonthlyMatchedAmount>> GetMonthlyByTextAsync(string userId, string matchText, DateOnly from, DateOnly to, int? accountId);
+    Task<List<RecurringCandidate>> GetRecurringCandidatesAsync(string userId, DateOnly from, DateOnly to, int? accountId);
+    Task DeleteAllAsync(string userId);
 }
 
 public record MonthlyTotal(int Year, int Month, decimal Income, decimal Expenses);

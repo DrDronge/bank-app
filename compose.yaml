@@ -21,23 +21,45 @@ services:
       timeout: 5s
       retries: 5
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.7
+    container_name: keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+      - keycloak_data:/opt/keycloak/data/h2
+    ports:
+      - "127.0.0.1:8180:8080"
+    networks:
+      - app_network
+
   api:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: bank_api
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks:
       - app_network
     environment:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
+      # Backend uses internal Docker hostname; frontend gets the public URL via /api/config
+      Keycloak__Authority: http://keycloak:8080/realms/bank
+      Keycloak__PublicUrl: http://localhost:8180
+      Keycloak__Realm: bank
+      Keycloak__ClientId: bank-web
     env_file:
       - .env
     depends_on:
       postgres:
         condition: service_healthy
+      keycloak:
+        condition: service_started
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -51,7 +73,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "5433:80"
+      - "127.0.0.1:5433:80"
     networks:
       - app_network
     depends_on:
@@ -62,7 +84,7 @@ services:
     image: metabase/metabase:latest
     container_name: metabase
     ports:
-      - "5434:3000"
+      - "127.0.0.1:5434:3000"
     networks:
       - app_network
     depends_on:
@@ -75,6 +97,8 @@ volumes:
   pgadmin_working_dir:
     driver: local
   pgadmin_config_dir:
+    driver: local
+  keycloak_data:
     driver: local
 
 networks:

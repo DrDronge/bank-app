@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using bank.Persistence.Repository;
 
@@ -6,7 +7,8 @@ namespace bank.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TransactionsController(ITransactionRepository repository) : ControllerBase
+[Authorize]
+public class TransactionsController(ITransactionRepository repository) : AuthControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(
@@ -21,11 +23,21 @@ public class TransactionsController(ITransactionRepository repository) : Control
         [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDesc = true)
     {
-        var fromDate = string.IsNullOrEmpty(from) ? (DateOnly?)null : DateOnly.Parse(from);
-        var toDate = string.IsNullOrEmpty(to) ? (DateOnly?)null : DateOnly.Parse(to);
+        DateOnly? fromDate = null;
+        DateOnly? toDate = null;
+        if (!string.IsNullOrEmpty(from))
+        {
+            if (!DateOnly.TryParse(from, out var fd)) return BadRequest(new { error = "Invalid 'from' date." });
+            fromDate = fd;
+        }
+        if (!string.IsNullOrEmpty(to))
+        {
+            if (!DateOnly.TryParse(to, out var td)) return BadRequest(new { error = "Invalid 'to' date." });
+            toDate = td;
+        }
 
         var (items, total) = await repository.GetPagedAsync(
-            page, pageSize, search, category, fromDate, toDate, type, accountId, sortBy, sortDesc);
+            UserId, page, pageSize, search, category, fromDate, toDate, type, accountId, sortBy, sortDesc);
 
         return Ok(new
         {
@@ -40,7 +52,7 @@ public class TransactionsController(ITransactionRepository repository) : Control
     [HttpGet("categories")]
     public async Task<IActionResult> GetCategories()
     {
-        var categories = await repository.GetCategoriesAsync();
+        var categories = await repository.GetCategoriesAsync(UserId);
         return Ok(categories);
     }
 
@@ -53,10 +65,20 @@ public class TransactionsController(ITransactionRepository repository) : Control
         [FromQuery] string? type = null,
         [FromQuery] int? accountId = null)
     {
-        var fromDate = string.IsNullOrEmpty(from) ? (DateOnly?)null : DateOnly.Parse(from);
-        var toDate = string.IsNullOrEmpty(to) ? (DateOnly?)null : DateOnly.Parse(to);
+        DateOnly? fromDate = null;
+        DateOnly? toDate = null;
+        if (!string.IsNullOrEmpty(from))
+        {
+            if (!DateOnly.TryParse(from, out var fd)) return BadRequest(new { error = "Invalid 'from' date." });
+            fromDate = fd;
+        }
+        if (!string.IsNullOrEmpty(to))
+        {
+            if (!DateOnly.TryParse(to, out var td)) return BadRequest(new { error = "Invalid 'to' date." });
+            toDate = td;
+        }
 
-        var (items, _) = await repository.GetPagedAsync(1, int.MaxValue, search, category, fromDate, toDate, type, accountId);
+        var (items, _) = await repository.GetPagedAsync(UserId, 1, int.MaxValue, search, category, fromDate, toDate, type, accountId);
 
         var sb = new StringBuilder();
         sb.AppendLine("Date,Description,Category,Subcategory,Amount,Balance,Status");
@@ -84,9 +106,12 @@ public class TransactionsController(ITransactionRepository repository) : Control
         [FromQuery] int? accountId = null)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var fromDate = string.IsNullOrEmpty(from) ? DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-2)) : DateOnly.Parse(from);
-        var toDate = string.IsNullOrEmpty(to) ? today : DateOnly.Parse(to);
-        var candidates = await repository.GetRecurringCandidatesAsync(fromDate, toDate, accountId);
+        var fromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-2));
+        var toDate = today;
+        if (!string.IsNullOrEmpty(from) && !DateOnly.TryParse(from, out fromDate)) return BadRequest(new { error = "Invalid 'from' date." });
+        if (!string.IsNullOrEmpty(to) && !DateOnly.TryParse(to, out toDate)) return BadRequest(new { error = "Invalid 'to' date." });
+
+        var candidates = await repository.GetRecurringCandidatesAsync(UserId, fromDate, toDate, accountId);
         return Ok(candidates.Select(c => new
         {
             c.Text,
@@ -107,9 +132,10 @@ public class TransactionsController(ITransactionRepository repository) : Control
         if (string.IsNullOrWhiteSpace(matchText))
             return BadRequest(new { error = "matchText is required." });
 
-        var fromDate = DateOnly.Parse(from);
-        var toDate = DateOnly.Parse(to);
-        var total = await repository.GetMatchedTotalAsync(matchText, fromDate, toDate, accountId);
+        if (!DateOnly.TryParse(from, out var fromDate)) return BadRequest(new { error = "Invalid 'from' date." });
+        if (!DateOnly.TryParse(to, out var toDate)) return BadRequest(new { error = "Invalid 'to' date." });
+
+        var total = await repository.GetMatchedTotalAsync(UserId, matchText, fromDate, toDate, accountId);
         return Ok(new { total });
     }
 
@@ -123,16 +149,17 @@ public class TransactionsController(ITransactionRepository repository) : Control
         if (string.IsNullOrWhiteSpace(matchText))
             return BadRequest(new { error = "matchText is required." });
 
-        var fromDate = DateOnly.Parse(from);
-        var toDate = DateOnly.Parse(to);
-        var result = await repository.GetMonthlyByTextAsync(matchText, fromDate, toDate, accountId);
+        if (!DateOnly.TryParse(from, out var fromDate)) return BadRequest(new { error = "Invalid 'from' date." });
+        if (!DateOnly.TryParse(to, out var toDate)) return BadRequest(new { error = "Invalid 'to' date." });
+
+        var result = await repository.GetMonthlyByTextAsync(UserId, matchText, fromDate, toDate, accountId);
         return Ok(result.Select(r => new { year = r.Year, month = r.Month, amount = r.Amount }));
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteAll()
     {
-        await repository.DeleteAllAsync();
+        await repository.DeleteAllAsync(UserId);
         return Ok(new { message = "All transactions deleted." });
     }
 

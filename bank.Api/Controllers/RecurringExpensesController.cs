@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using bank.Persistence.Repository;
 
@@ -5,12 +6,13 @@ namespace bank.Api.Controllers;
 
 [ApiController]
 [Route("api/recurring")]
-public class RecurringExpensesController(IRecurringExpenseRepository repository) : ControllerBase
+[Authorize]
+public class RecurringExpensesController(IRecurringExpenseRepository repository) : AuthControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var expenses = await repository.GetAllAsync();
+        var expenses = await repository.GetAllAsync(UserId);
         return Ok(expenses.Select(e => ToDto(e)));
     }
 
@@ -20,9 +22,15 @@ public class RecurringExpensesController(IRecurringExpenseRepository repository)
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { error = "Name is required." });
 
-        var endDate = string.IsNullOrEmpty(request.EndDate) ? (DateOnly?)null : DateOnly.Parse(request.EndDate);
+        DateOnly? endDate = null;
+        if (!string.IsNullOrEmpty(request.EndDate))
+        {
+            if (!DateOnly.TryParse(request.EndDate, out var ed)) return BadRequest(new { error = "Invalid 'endDate' value." });
+            endDate = ed;
+        }
+
         var expense = await repository.CreateAsync(
-            request.Name, request.Amount, request.FrequencyMonths,
+            UserId, request.Name, request.Amount, request.FrequencyMonths,
             request.Category, request.Notes, request.MatchText, endDate);
 
         return Ok(ToDto(expense));
@@ -34,15 +42,28 @@ public class RecurringExpensesController(IRecurringExpenseRepository repository)
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { error = "Name is required." });
 
-        var endDate = string.IsNullOrEmpty(request.EndDate) ? (DateOnly?)null : DateOnly.Parse(request.EndDate);
+        DateOnly? endDate = null;
+        if (!string.IsNullOrEmpty(request.EndDate))
+        {
+            if (!DateOnly.TryParse(request.EndDate, out var ed)) return BadRequest(new { error = "Invalid 'endDate' value." });
+            endDate = ed;
+        }
+
         var expense = await repository.UpdateAsync(
-            id, request.Name, request.Amount, request.FrequencyMonths,
+            UserId, id, request.Name, request.Amount, request.FrequencyMonths,
             request.Category, request.Notes, request.MatchText, endDate);
 
         if (expense is null)
             return NotFound(new { error = "Recurring expense not found." });
 
         return Ok(ToDto(expense));
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await repository.DeleteAsync(UserId, id);
+        return Ok(new { message = "Recurring expense deleted." });
     }
 
     private static object ToDto(bank.Persistence.Models.RecurringExpense e)
@@ -61,13 +82,6 @@ public class RecurringExpensesController(IRecurringExpenseRepository repository)
             monthlyEquivalent,
             annualEquivalent = monthlyEquivalent * 12
         };
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        await repository.DeleteAsync(id);
-        return Ok(new { message = "Recurring expense deleted." });
     }
 }
 

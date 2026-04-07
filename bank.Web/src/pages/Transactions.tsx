@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Search, ChevronLeft, ChevronRight, Download, ChevronUp, ChevronDown } from 'lucide-react'
-import { getTransactions, getCategories, getAccounts, buildExportUrl, type Transaction, type BankAccount } from '../api/client'
+import { getTransactions, getCategories, getAccounts, exportCsv, type Transaction, type BankAccount } from '../api/client'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' }).format(n)
@@ -66,7 +66,7 @@ export default function Transactions() {
 
   const handleSearch = (v: string) => { setSearch(v); setPage(1) }
 
-  const exportUrl = buildExportUrl({
+  const handleExport = () => exportCsv({
     search: search || undefined,
     category: category || undefined,
     type: type || undefined,
@@ -80,14 +80,13 @@ export default function Transactions() {
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Transactions</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{total} transactions total</p>
         </div>
-        <a
-          href={exportUrl}
-          download
+        <button
+          onClick={handleExport}
           className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition"
         >
           <Download className="w-4 h-4" />
           Export CSV
-        </a>
+        </button>
       </div>
 
       {/* Filters */}
