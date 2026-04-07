@@ -1,0 +1,368 @@
+/* BudgetWise Keycloak Theme
+   Palette mirrors the React app:
+   primary:  #4f46e5 (indigo-600)
+   bg:       #f8fafc (slate-50)
+   card:     #ffffff
+   border:   #e2e8f0 (slate-200)
+   text:     #1e293b (slate-800)
+   muted:    #64748b (slate-500)
+*/
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f8fafc;
+  color: #1e293b;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+
+.bw-page {
+  width: 100%;
+  max-width: 440px;
+  padding: 1rem;
+}
+
+.bw-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.04);
+}
+
+/* ── Logo ────────────────────────────────────────────── */
+
+.bw-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.bw-logo-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  background: #4f46e5;
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.bw-logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.bw-logo-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.bw-logo-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+/* ── Headings ────────────────────────────────────────── */
+
+.bw-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.bw-subheading {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 1.75rem;
+}
+
+/* ── Alerts ─────────────────────────────────────────── */
+
+.bw-alert {
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.bw-alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.bw-alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.bw-alert-info    { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.bw-alert-warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+
+/* ── Form ────────────────────────────────────────────── */
+
+.bw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.bw-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.bw-required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.bw-input {
+  width: 100%;
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.bw-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.bw-input.error {
+  border-color: #ef4444;
+}
+
+.bw-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.bw-field-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  line-height: 1.4;
+}
+
+/* Password wrapper with show/hide toggle */
+.bw-input-wrap {
+  position: relative;
+}
+
+.bw-input-wrap .bw-input {
+  padding-right: 2.75rem;
+}
+
+.bw-eye {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: color 0.15s;
+}
+
+.bw-eye:hover { color: #64748b; }
+
+/* ── Remember-me + forgot row ───────────────────────── */
+
+.bw-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bw-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bw-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #4f46e5;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Links ───────────────────────────────────────────── */
+
+.bw-link {
+  font-size: 0.875rem;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.bw-link:hover { color: #4338ca; text-decoration: underline; }
+
+/* ── Buttons ─────────────────────────────────────────── */
+
+.bw-btn {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #4f46e5;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
+  margin-top: 0.25rem;
+  line-height: 1.5;
+}
+
+.bw-btn:hover  { background: #4338ca; }
+.bw-btn:active { background: #3730a3; }
+.bw-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.bw-btn-secondary {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
+  text-decoration: none;
+  display: block;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.bw-btn-secondary:hover { background: #e2e8f0; }
+
+/* ── Footer / register link ─────────────────────────── */
+
+.bw-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.bw-footer a {
+  color: #4f46e5;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.bw-footer a:hover { text-decoration: underline; }
+
+/* ── Info / success box ─────────────────────────────── */
+
+.bw-info-box {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Divider ─────────────────────────────────────────── */
+
+.bw-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.25rem 0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.bw-divider::before,
+.bw-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+/* ── Social providers ───────────────────────────────── */
+
+.bw-social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-bottom: 0.25rem;
+}
+
+.bw-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.bw-social-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .bw-card { padding: 1.75rem 1.5rem; }
+}

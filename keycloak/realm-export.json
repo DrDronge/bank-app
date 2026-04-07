@@ -3,6 +3,8 @@
   "enabled": true,
   "displayName": "BudgetWise",
   "sslRequired": "external",
+  "loginTheme": "bank",
+  "accountTheme": "keycloak",
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
