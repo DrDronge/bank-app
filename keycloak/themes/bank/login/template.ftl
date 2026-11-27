@@ -1,13 +1,13 @@
 <#macro registrationLayout bodyClass="" displayInfo=false displayMessage=true displayRequiredFields=false>
 <!DOCTYPE html>
-<html lang="${locale.currentLanguageTag}">
+<html lang="${(locale.currentLanguageTag)!'en'}">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>${msg("loginTitle",(realm.displayName!'BudgetWise'))}</title>
-  <link rel="stylesheet" href="${url.resourcesPath}/css/login.css">
+  <link rel="stylesheet" href="${url.resourcesPath}/css/login.css?v=4">
 </head>
 <body>
   <div class="bw-page">
@@ -33,7 +33,7 @@
         </div>
       </#if>
 
-      <#nested>
+      <#nested "">
 
       <#if displayInfo>
         <div class="bw-info-box">

@@ -27,8 +27,8 @@ spec:
     spec:
       containers:
         - name: keycloak
-          image: quay.io/keycloak/keycloak:26.5.7
-          args: ["start-dev", "--import-realm"]
+          image: localhost:30500/keycloak:26.5.7-bank.5
+          args: ["start", "--import-realm"]
           ports:
             - containerPort: 8080
           envFrom:
@@ -36,16 +36,31 @@ spec:
                 name: keycloak-secret
           env:
             - name: KC_HOSTNAME
-              value: "auth.madpro.dk"
+              value: "https://auth.madpro.dk"
+            # Admin console only via port-forward; /admin is blocked publicly in the apps tunnel.
+            - name: KC_HOSTNAME_ADMIN
+              value: "http://localhost:8080"
             - name: KC_HTTP_ENABLED
               value: "true"
             - name: KC_PROXY_HEADERS
               value: "xforwarded"
+            # KC_DB_USERNAME/KC_DB_PASSWORD come from keycloak-secret (DB "keycloak" in the shared Postgres).
+            # One replica: no JGroups cluster (avoids errors during rolling updates).
+            - name: KC_CACHE
+              value: "local"
+            - name: KC_DB
+              value: "postgres"
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgres:5432/keycloak"
           volumeMounts:
             - name: data
               mountPath: /opt/keycloak/data
             - name: realm
               mountPath: /opt/keycloak/data/import
+            # Keycloak's gzip cache for theme resources lives here, keyed by Keycloak version, not theme:
+            # on the PVC it served stale CSS after theme changes.
+            - name: tmp
+              mountPath: /opt/keycloak/data/tmp
           readinessProbe:
             httpGet:
               path: /realms/master
@@ -60,6 +75,8 @@ spec:
         - name: realm
           configMap:
             name: keycloak-realm
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -72,22 +89,3 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: keycloak
-  namespace: bank-app
-spec:
-  ingressClassName: traefik
-  rules:
-    - host: auth.madpro.dk
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: keycloak
-                port:
-                  number: 8080
