@@ -5,9 +5,9 @@
     <h1 class="bw-heading">${msg("emailForgotTitle")}</h1>
     <p class="bw-subheading">
       <#if realm.loginWithEmailAllowed && !realm.registrationEmailAsUsername>
-        ${msg("emailInstruction"!"Enter your username or email and we'll send you a reset link.")}
+        Enter your username or email and we'll send you a reset link.
       <#else>
-        ${msg("emailInstructionUsername"!"Enter your email and we'll send you a reset link.")}
+        Enter your email and we'll send you a reset link.
       </#if>
     </p>
 
@@ -34,12 +34,12 @@
     </form>
 
     <div class="bw-footer">
-      <a href="${url.loginUrl}">&larr; ${msg("backToLogin"!"Back to sign in")}</a>
+      <a class="bw-link" href="${url.loginUrl}">&larr; ${msg("backToLogin")}</a>
     </div>
   </#if>
 
   <#if section = "info">
-    ${msg("emailSent"!"Check your inbox for the password reset link.")}
+    Check your inbox — we sent a password reset link.
   </#if>
 
 </@layout.registrationLayout>

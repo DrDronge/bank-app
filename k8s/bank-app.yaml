@@ -25,12 +25,24 @@ spec:
             - name: ASPNETCORE_URLS
               value: http://+:8080
             - name: AllowedHosts
-              value: "bank.madpro.dk"
-            - name: ConnectionStrings__DefaultConnection
+              value: "*"
+            - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
-                  key: connection-string
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: ConnectionStrings__DefaultConnection
+              value: "Host=postgres;Port=5432;Database=$(POSTGRES_DB);Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD)"
             - name: Keycloak__Authority
               value: "https://auth.madpro.dk/realms/bank"
             - name: Keycloak__PublicUrl

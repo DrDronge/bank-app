@@ -17,6 +17,8 @@ metadata:
   namespace: bank-app
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: keycloak
@@ -27,7 +29,7 @@ spec:
     spec:
       containers:
         - name: keycloak
-          image: localhost:30500/keycloak:26.5.7-bank.5
+          image: localhost:30500/keycloak:26.5.7-bank.6
           args: ["start", "--import-realm"]
           ports:
             - containerPort: 8080

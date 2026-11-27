@@ -9,6 +9,7 @@
 # Kubernetes secrets (contain passwords — never commit)
 k8s/postgres-secret.yaml
 k8s/keycloak-secret.yaml
+k8s/cloudflared-secret.yaml
 
 # Bank CSV exports — may contain real financial data
 *.csv
