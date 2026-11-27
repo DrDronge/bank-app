@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>${msg("loginTitle",(realm.displayName!'BudgetWise'))}</title>
-  <link rel="stylesheet" href="${url.resourcesPath}/css/login.css">
+  <link rel="stylesheet" href="${url.resourcesPath}/css/login.css?v=5">
 </head>
 <body>
   <div class="bw-page">

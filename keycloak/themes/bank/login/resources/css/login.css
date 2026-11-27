@@ -526,3 +526,32 @@ body::before {
 @media (max-width: 480px) {
   .bw-card { padding: 1.75rem 1.5rem; }
 }
+
+/* ── Dark mode (mirrors the app's dark: classes) ────── */
+/* shortcut: follows the OS setting; the app's manual toggle (localStorage on bank.madpro.dk) can't be read here. Upgrade: share the choice via a .madpro.dk cookie. */
+
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; }
+  body { background: #020617; color: #f1f5f9; }
+  .bw-card { background: #0f172a; border-color: #1e293b; box-shadow: none; }
+  .bw-logo-name, .bw-heading { color: #f1f5f9; }
+  .bw-logo-sub { color: #64748b; }
+  .bw-subheading, .bw-checkbox-label, .bw-footer { color: #94a3b8; }
+  .bw-label { color: #cbd5e1; }
+  .bw-input, .bw-social-btn { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+  .bw-input::placeholder { color: #64748b; }
+  .bw-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2); }
+  .bw-eye { color: #64748b; }
+  .bw-eye:hover { color: #94a3b8; }
+  .bw-link, .bw-footer a { color: #818cf8; }
+  .bw-link:hover { color: #a5b4fc; }
+  .bw-btn-secondary { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+  .bw-btn-secondary:hover, .bw-social-btn:hover { background: #334155; border-color: #475569; }
+  .bw-info-box { background: rgba(30, 41, 59, 0.6); border-color: #334155; color: #94a3b8; }
+  .bw-divider { color: #64748b; }
+  .bw-divider::before, .bw-divider::after { background: #334155; }
+  .bw-alert-error   { background: rgba(127, 29, 29, 0.3); color: #f87171; border-color: #991b1b; }
+  .bw-alert-success { background: rgba(6, 78, 59, 0.3);  color: #34d399; border-color: #065f46; }
+  .bw-alert-info    { background: rgba(30, 58, 138, 0.3); color: #60a5fa; border-color: #1e40af; }
+  .bw-alert-warning { background: rgba(120, 53, 15, 0.3); color: #fbbf24; border-color: #92400e; }
+}

@@ -10,6 +10,7 @@
 k8s/postgres-secret.yaml
 k8s/keycloak-secret.yaml
 k8s/cloudflared-secret.yaml
+k8s/*.save
 
 # Bank CSV exports — may contain real financial data
 *.csv

@@ -1,0 +1,12 @@
+- [x] Smoke test (red: admin 200)
+- [x] Tunnel path rule → admin 404 (green)
+- [x] DB/role `keycloak` + secret keys
+- [x] Export H2 → import Postgres (backup on keycloak-pvc)
+- [x] `start` + Postgres + KC_HOSTNAME_ADMIN deployed, smoke test green
+- [x] Theme image + template fix, tested in a throwaway container, deployed
+- [x] KC_CACHE=local
+- [x] Manual login as a bank user at https://bank.madpro.dk (reported OK by the user, before the theme change)
+- [x] Traefik Ingress for auth.madpro.dk removed (LAN admin → 404)
+- [x] Dark mode (prefers-color-scheme), gzip cache on emptyDir, CSS cache-busting
+- [x] Login with the BudgetWise theme checked by the user
+- [x] Deleted `export-2026-11-27/` + H2 `.bak` from keycloak-pvc
